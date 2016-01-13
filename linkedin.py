@@ -1,10 +1,17 @@
 # -*- coding: utf-8 -*-
-
 """
+Simple Linkedin crawler to collect user's  profile data.
 
 @author: idwaker
 
-This uses webdriver
+To use this you need linkedin account, all search is done through your account
+
+Requirements:
+    python-selenium
+    python-click
+    python-keyring
+
+Tested on Python 3 not sure how Python 2 behaves
 """
 
 import sys
@@ -169,6 +176,7 @@ def crawl(browser, username, infile, outfile):
             links = [link.get_attribute('href') for link in links]
             for link in links:
                 # XXX: This whole section should be separated from this method
+                # XXX: move try-except to context managers
                 bus.driver.get(link)
 
                 overview = None
