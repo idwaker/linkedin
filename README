@@ -8,7 +8,8 @@ WIP
 To store password in keychain
 
 ::
-    $ python linkedin.py store me@email.com my_linkedin_password
+    $ python linkedin.py store me@email.com
+    Password: **
 
 
 To run crawler

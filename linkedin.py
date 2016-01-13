@@ -11,6 +11,7 @@ import sys
 import csv
 import time
 import click
+import getpass
 import keyring
 from selenium import webdriver
 from selenium.common.exceptions import WebDriverException
@@ -65,7 +66,7 @@ def get_password(username):
     """
     get password from stored keychain service
     """
-    password = keyring.get_password('linkedinv3', username)
+    password = keyring.get_password('linkedinpy', username)
     if not password:
         raise UnknownUserException("""You need to store password for this user
                                         first.""")
@@ -108,7 +109,8 @@ def cli():
     """
     First store password
 
-    $ python linkedin store username@example.com my_linkedin_password
+    $ python linkedin store username@example.com
+    Password: **
 
     Then crawl linkedin for users
 
@@ -167,12 +169,13 @@ def crawl(browser, username, infile, outfile):
 
 @click.command()
 @click.argument('username')
-@click.argument('password')
-def store(username, password):
+def store(username):
     """
     Store given password for this username to keystore
     """
-    keyring.set_password('linkedinv3', username, password)
+    passwd = getpass.getpass()
+    keyring.set_password('linkedinpy', username, passwd)
+    click.echo("Password updated successfully")
 
 
 cli.add_command(crawl)
