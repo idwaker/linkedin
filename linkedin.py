@@ -144,7 +144,7 @@ def crawl(browser, username, infile, outfile):
         writer.writeheader()
 
     search_btn = '//form[@id="global-search"]//button[@class="search-button"]'
-    link_title = '//a[@class="title main-headline"]'
+    link_title = './/a[@class="title main-headline"]'
 
     # now open the browser
     with WebBus(browser) as bus:
@@ -162,7 +162,8 @@ def crawl(browser, username, infile, outfile):
             profiles = []
 
             # collect all the profile links
-            links = bus.driver.find_elements_by_xpath(link_title)
+            results = bus.driver.find_element_by_id('results-container')
+            links = results.find_elements_by_xpath(link_title)
 
             # get all the links before going through each page
             links = [link.get_attribute('href') for link in links]
