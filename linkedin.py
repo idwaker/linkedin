@@ -14,7 +14,8 @@ import click
 import getpass
 import keyring
 from selenium import webdriver
-from selenium.common.exceptions import WebDriverException
+from selenium.common.exceptions import (WebDriverException,
+                                        NoSuchElementException)
 
 
 LINKEDIN_URL = 'https://www.linkedin.com'
@@ -132,7 +133,8 @@ def crawl(browser, username, infile, outfile):
     # first check and read the input file
     all_names = collect_names(infile)
 
-    fieldnames = ['fullname', 'country',]
+    fieldnames = ['fullname', 'current summary', 'past summary', 'education',
+                  ]
     # then check we can write the output file
     # we don't want to complete process and show error about not
     # able to write outputs
@@ -157,14 +159,71 @@ def crawl(browser, username, infile, outfile):
             search_button = bus.driver.find_element_by_xpath(search_btn)
             search_button.click()
 
+            profiles = []
+
             # collect all the profile links
             links = bus.driver.find_elements_by_xpath(link_title)
             for link in links:
+                # XXX: This whole section should be separated from this method
                 bus.driver.get(link.get_attribute('href'))
 
-                # parse profile data now
+                overview = None
+                overview_xpath = '//div[@class="profile-overview-content"]'
+                try:
+                    overview = bus.driver.find_element_by_xpath(overview_xpath)
+                except NoSuchElementException:
+                    click.echo("No overview section skipping this user")
+                    continue
 
-            break
+                # every xpath below here are relative
+                fullname = None
+                fullname_xpath = './/span[@class="full-name"]'
+                try:
+                    fullname = overview.find_element_by_xpath(fullname_xpath)
+                except NoSuchElementException:
+                    # we store empty fullname : notsure for this
+                    fullname = ''
+                else:
+                    fullname = fullname.text.strip()
+
+                current_summary = None
+                csummary_xpath = './/tr[@id="overview-summary-current"]/td'
+                try:
+                    current_summary = overview.find_element_by_xpath(csummary_xpath)
+                except NoSuchElementException:
+                    current_summary = ''
+                else:
+                    current_summary = current_summary.text.strip()
+
+                past_summary = None
+                psummary_xpath = './/tr[@id="overview-summary-past"]/td'
+                try:
+                    past_summary = overview.find_element_by_xpath(psummary_xpath)
+                except NoSuchElementException:
+                    past_summary = ''
+                else:
+                    past_summary = past_summary.text.strip()
+
+                education = None
+                education_xpath = './/tr[@id="overview-summary-education"]/td'
+                try:
+                    education = overview.find_element_by_xpath(education_xpath)
+                except NoSuchElementException:
+                    education = ''
+                else:
+                    education = education.text.strip()
+
+                data = {
+                    'fullname': fullname,
+                    'current summary': current_summary,
+                    'past summary': past_summary,
+                    'education': education,
+                }
+                profiles.append(data)
+
+            with open(outfile, 'a+') as csvfile:
+                writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+                writer.writerows(profiles)
 
 
 @click.command()
@@ -180,7 +239,6 @@ def store(username):
 
 cli.add_command(crawl)
 cli.add_command(store)
-
 
 
 if __name__ == '__main__':
