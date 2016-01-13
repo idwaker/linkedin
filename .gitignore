@@ -3,6 +3,9 @@
 *.py[co]
 __pycache__/
 
+# ignore log files
+*.log
+
 # ignore virtualenv directory
 venv/
 
