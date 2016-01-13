@@ -133,8 +133,8 @@ def crawl(browser, username, infile, outfile):
     # first check and read the input file
     all_names = collect_names(infile)
 
-    fieldnames = ['fullname', 'current summary', 'past summary', 'education',
-                  ]
+    fieldnames = ['fullname', 'locality', 'industry', 'current summary',
+                  'past summary', 'education', ]
     # then check we can write the output file
     # we don't want to complete process and show error about not
     # able to write outputs
@@ -190,6 +190,22 @@ def crawl(browser, username, infile, outfile):
                 else:
                     fullname = fullname.text.strip()
 
+                locality = None
+                try:
+                    locality = overview.find_element_by_class_name('locality')
+                except NoSuchElementException:
+                    locality = ''
+                else:
+                    locality = locality.text.strip()
+
+                industry = None
+                try:
+                    industry = overview.find_element_by_class_name('industry')
+                except NoSuchElementException:
+                    industry = ''
+                else:
+                    industry = industry.text.strip()
+
                 current_summary = None
                 csummary_xpath = './/tr[@id="overview-summary-current"]/td'
                 try:
@@ -219,6 +235,8 @@ def crawl(browser, username, infile, outfile):
 
                 data = {
                     'fullname': fullname,
+                    'locality': locality,
+                    'industry': industry,
                     'current summary': current_summary,
                     'past summary': past_summary,
                     'education': education,
