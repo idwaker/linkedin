@@ -163,9 +163,12 @@ def crawl(browser, username, infile, outfile):
 
             # collect all the profile links
             links = bus.driver.find_elements_by_xpath(link_title)
+
+            # get all the links before going through each page
+            links = [link.get_attribute('href') for link in links]
             for link in links:
                 # XXX: This whole section should be separated from this method
-                bus.driver.get(link.get_attribute('href'))
+                bus.driver.get(link)
 
                 overview = None
                 overview_xpath = '//div[@class="profile-overview-content"]'
