@@ -8,6 +8,7 @@ WIP
 To store password in keychain
 
 ::
+
     $ python linkedin.py store me@email.com
     Password: **
 
@@ -15,4 +16,5 @@ To store password in keychain
 To run crawler
 
 ::
+
     $ python linkedin.py crawl me@email.com list_of_names.csv dump_profiles_here.csv --browser=firefox
