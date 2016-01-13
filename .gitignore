@@ -11,3 +11,6 @@ venv/
 
 # ignore komodo project files
 *.komodoproject
+
+# ignore project specific files/directories
+*.csv
