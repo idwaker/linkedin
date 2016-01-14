@@ -20,6 +20,7 @@ import time
 import click
 import getpass
 import keyring
+from contextlib import contextmanager
 from selenium import webdriver
 from selenium.common.exceptions import (WebDriverException,
                                         NoSuchElementException)
@@ -36,38 +37,28 @@ class UnknownBrowserException(Exception):
     pass
 
 
-class WebBus:
+@contextmanager
+def bus(browser):
     """
-    context manager to handle webdriver part
+    XXX: check if it is correct way to it
     """
-
-    def __init__(self, browser):
-        self.browser = browser
-        self.driver = None
-
-    def __enter__(self):
-        # XXX: This is not so elegant
-        # should be written in better way
-        if self.browser.lower() == 'firefox':
-            self.driver = webdriver.Firefox()
-        elif self.browser.lower() == 'chrome':
-            self.driver = webdriver.Chrome()
-        elif self.browser.lower() == 'phantomjs':
-            self.driver = webdriver.PhantomJS()
+    driver = None
+    try:
+        if browser.lower() == 'firefox':
+            driver = webdriver.Firefox()
+        elif browser.lower() == 'chrome':
+            driver = webdriver.Chrome()
+        elif browser.lower() == 'phantomjs':
+            driver = webdriver.PhantomJS()
         else:
-            raise UnknownBrowserException("Unknown Browser")
-
-        return self
-
-    def __exit__(self, _type, value, traceback):
-        if _type is FileNotFoundError or _type is WebDriverException:
-            click.echo("Please make sure you have this browser")
-            return False
-        if _type is UnknownBrowserException:
-            click.echo("Please use either Firefox, PhantomJS or Chrome")
-            return False
-
-        self.driver.close()
+            driver = webdriver.Remote(browser)
+        yield driver
+    except (FileNotFoundError, WebDriverException):
+        yield driver
+        click.echo("Please install selected browser first or use either Firefox, PhantomJS or Chrome")
+    finally:
+        if driver:
+            driver.close()
 
 
 def get_password(username):
@@ -154,13 +145,13 @@ def crawl(browser, username, infile, outfile):
     link_title = './/a[@class="title main-headline"]'
 
     # now open the browser
-    with WebBus(browser) as bus:
-        bus.driver.get(LINKEDIN_URL)
+    with bus(browser) as driver:
+        driver.get(LINKEDIN_URL)
 
         login_into_linkedin(bus.driver, username)
 
         for name in all_names:
-            search_input = bus.driver.find_element_by_id('main-search-box')
+            search_input = driver.find_element_by_id('main-search-box')
             search_input.send_keys(name)
 
             search_button = bus.driver.find_element_by_xpath(search_btn)
@@ -169,7 +160,7 @@ def crawl(browser, username, infile, outfile):
             profiles = []
 
             # collect all the profile links
-            results = bus.driver.find_element_by_id('results-container')
+            results = driver.find_element_by_id('results-container')
             links = results.find_elements_by_xpath(link_title)
 
             # get all the links before going through each page
@@ -177,12 +168,12 @@ def crawl(browser, username, infile, outfile):
             for link in links:
                 # XXX: This whole section should be separated from this method
                 # XXX: move try-except to context managers
-                bus.driver.get(link)
+                driver.get(link)
 
                 overview = None
                 overview_xpath = '//div[@class="profile-overview-content"]'
                 try:
-                    overview = bus.driver.find_element_by_xpath(overview_xpath)
+                    overview = driver.find_element_by_xpath(overview_xpath)
                 except NoSuchElementException:
                     click.echo("No overview section skipping this user")
                     continue
