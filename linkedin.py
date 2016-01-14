@@ -54,8 +54,8 @@ def bus(browser):
             driver = webdriver.Remote(browser)
         yield driver
     except (FileNotFoundError, WebDriverException):
-        yield driver
         click.echo("Please install selected browser first or use either Firefox, PhantomJS or Chrome")
+        yield driver
     finally:
         if driver:
             driver.close()
@@ -146,6 +146,9 @@ def crawl(browser, username, infile, outfile):
 
     # now open the browser
     with bus(browser) as driver:
+        if not driver:
+            return
+
         driver.get(LINKEDIN_URL)
 
         login_into_linkedin(bus.driver, username)
