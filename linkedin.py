@@ -20,7 +20,6 @@ import time
 import click
 import getpass
 import keyring
-from contextlib import contextmanager
 from selenium import webdriver
 from selenium.common.exceptions import (WebDriverException,
                                         NoSuchElementException)
@@ -37,28 +36,38 @@ class UnknownBrowserException(Exception):
     pass
 
 
-@contextmanager
-def bus(browser):
+class WebBus:
     """
-    XXX: check if it is correct way to it
+    context manager to handle webdriver part
     """
-    driver = None
-    try:
-        if browser.lower() == 'firefox':
-            driver = webdriver.Firefox()
-        elif browser.lower() == 'chrome':
-            driver = webdriver.Chrome()
-        elif browser.lower() == 'phantomjs':
-            driver = webdriver.PhantomJS()
+
+    def __init__(self, browser):
+        self.browser = browser
+        self.driver = None
+
+    def __enter__(self):
+        # XXX: This is not so elegant
+        # should be written in better way
+        if self.browser.lower() == 'firefox':
+            self.driver = webdriver.Firefox()
+        elif self.browser.lower() == 'chrome':
+            self.driver = webdriver.Chrome()
+        elif self.browser.lower() == 'phantomjs':
+            self.driver = webdriver.PhantomJS()
         else:
-            driver = webdriver.Remote(browser)
-        yield driver
-    except (FileNotFoundError, WebDriverException):
-        click.echo("Please install selected browser first or use either Firefox, PhantomJS or Chrome")
-        yield driver
-    finally:
-        if driver:
-            driver.close()
+            raise UnknownBrowserException("Unknown Browser")
+
+        return self
+
+    def __exit__(self, _type, value, traceback):
+        if _type is FileNotFoundError or _type is WebDriverException:
+            click.echo("Please make sure you have this browser")
+            return False
+        if _type is UnknownBrowserException:
+            click.echo("Please use either Firefox, PhantomJS or Chrome")
+            return False
+
+        self.driver.close()
 
 
 def get_password(username):
@@ -145,16 +154,13 @@ def crawl(browser, username, infile, outfile):
     link_title = './/a[@class="title main-headline"]'
 
     # now open the browser
-    with bus(browser) as driver:
-        if not driver:
-            return
+    with WebBus(browser) as bus:
+        bus.driver.get(LINKEDIN_URL)
 
-        driver.get(LINKEDIN_URL)
-
-        login_into_linkedin(driver, username)
+        login_into_linkedin(bus.driver, username)
 
         for name in all_names:
-            search_input = driver.find_element_by_id('main-search-box')
+            search_input = bus.driver.find_element_by_id('main-search-box')
             search_input.send_keys(name)
 
             search_button = bus.driver.find_element_by_xpath(search_btn)
@@ -163,7 +169,11 @@ def crawl(browser, username, infile, outfile):
             profiles = []
 
             # collect all the profile links
-            results = driver.find_element_by_id('results-container')
+            results = None
+            try:
+                results = bus.driver.find_element_by_id('results-container')
+            except NoSuchElementException:
+                continue
             links = results.find_elements_by_xpath(link_title)
 
             # get all the links before going through each page
@@ -171,12 +181,12 @@ def crawl(browser, username, infile, outfile):
             for link in links:
                 # XXX: This whole section should be separated from this method
                 # XXX: move try-except to context managers
-                driver.get(link)
+                bus.driver.get(link)
 
                 overview = None
                 overview_xpath = '//div[@class="profile-overview-content"]'
                 try:
-                    overview = driver.find_element_by_xpath(overview_xpath)
+                    overview = bus.driver.find_element_by_xpath(overview_xpath)
                 except NoSuchElementException:
                     click.echo("No overview section skipping this user")
                     continue
