@@ -151,7 +151,7 @@ def crawl(browser, username, infile, outfile):
 
         driver.get(LINKEDIN_URL)
 
-        login_into_linkedin(bus.driver, username)
+        login_into_linkedin(driver, username)
 
         for name in all_names:
             search_input = driver.find_element_by_id('main-search-box')
