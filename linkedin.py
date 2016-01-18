@@ -160,11 +160,16 @@ def crawl(browser, username, infile, outfile):
         login_into_linkedin(bus.driver, username)
 
         for name in all_names:
-            search_input = bus.driver.find_element_by_id('main-search-box')
+            try:
+                search_input = bus.driver.find_element_by_id('main-search-box')
+            except NoSuchElementException:
+                continue
             search_input.send_keys(name)
 
-            search_button = bus.driver.find_element_by_xpath(search_btn)
-            search_button.click()
+            search_form = bus.driver.find_element_by_id('global-search')
+            search_form.submit()
+#            search_button = bus.driver.find_element_by_xpath(search_btn)
+#            search_button.click()
 
             profiles = []
 
