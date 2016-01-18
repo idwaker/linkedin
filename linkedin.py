@@ -99,6 +99,7 @@ def login_into_linkedin(driver, username):
         userfield.send_keys(username)
         passfield.send_keys(password)
         submit_form.submit()
+        click.echo("Logging in")
 
 
 def collect_names(filepath):
@@ -149,7 +150,6 @@ def crawl(browser, username, infile, outfile):
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
         writer.writeheader()
 
-    search_btn = '//form[@id="global-search"]//button[@class="search-button"]'
     link_title = './/a[@class="title main-headline"]'
 
     # now open the browser
