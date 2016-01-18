@@ -159,6 +159,7 @@ def crawl(browser, username, infile, outfile):
         login_into_linkedin(bus.driver, username)
 
         for name in all_names:
+            click.echo("Getting ...")
             try:
                 search_input = bus.driver.find_element_by_id('main-search-box')
             except NoSuchElementException:
@@ -262,6 +263,8 @@ def crawl(browser, username, infile, outfile):
             with open(outfile, 'a+') as csvfile:
                 writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
                 writer.writerows(profiles)
+
+            click.echo("Obtained ..." + name)
 
 
 @click.command()
