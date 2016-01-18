@@ -89,7 +89,7 @@ def login_into_linkedin(driver, username):
     userfield = driver.find_element_by_id('login-email')
     passfield = driver.find_element_by_id('login-password')
 
-    submit_xpath = '//form[@class="login-form"]/input[@name="submit"]'
+    submit_form = driver.find_element_by_class_name('login-form')
 
     password = get_password(username)
 
@@ -98,8 +98,7 @@ def login_into_linkedin(driver, username):
     if userfield and passfield:
         userfield.send_keys(username)
         passfield.send_keys(password)
-        submit = driver.find_element_by_xpath(submit_xpath)
-        submit.click()
+        submit_form.submit()
 
 
 def collect_names(filepath):
