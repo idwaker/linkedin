@@ -60,7 +60,7 @@ class WebBus:
         return self
 
     def __exit__(self, _type, value, traceback):
-        if _type is FileNotFoundError or _type is WebDriverException:
+        if _type is OSError or _type is WebDriverException:
             click.echo("Please make sure you have this browser")
             return False
         if _type is UnknownBrowserException:
