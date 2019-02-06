@@ -1,8 +1,8 @@
 Linkedin Web Search
 ===================
 
-WIP
----
+UNMAINTAINED
+------------
 
 
 To install (Python 3)
